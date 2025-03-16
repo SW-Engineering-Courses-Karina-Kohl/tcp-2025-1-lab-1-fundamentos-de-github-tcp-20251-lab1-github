@@ -52,12 +52,3 @@ jobs:
             echo "❌ Pull Request was NOT merged."
             exit 1
           fi
-
-      - name: Check for commit history consistency
-        run: |
-          git log --graph --oneline --all
-          if git log --graph --oneline --all | grep -q "rebase"; then
-            echo "✅ Rebase detected in commit history."
-          else
-            echo "⚠️ No explicit rebase found, but history will be manually reviewed."
-          fi
