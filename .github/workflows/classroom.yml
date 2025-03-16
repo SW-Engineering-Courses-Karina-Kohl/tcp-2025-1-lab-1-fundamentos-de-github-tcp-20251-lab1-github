@@ -1,0 +1,63 @@
+name: GitHub Classroom Autograding
+
+on: [push]
+
+jobs:
+  autograding:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Ensures full commit history is available
+
+      - name: Check if `intro.txt` was modified in main branch
+        run: |
+          if git log --pretty=format: --name-only | grep -q "intro.txt"; then
+            echo "✅ intro.txt was modified in main branch."
+          else
+            echo "❌ intro.txt was NOT modified in main branch."
+            exit 1
+          fi
+
+      - name: Check if `feature-branch` exists
+        run: |
+          if git show-ref --verify --quiet refs/heads/feature-branch; then
+            echo "✅ feature-branch exists."
+          else
+            echo "❌ feature-branch does not exist."
+            exit 1
+          fi
+
+      - name: Check if a Pull Request exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_COUNT=$(gh pr list --state all --json number --jq 'length')
+          if [ "$PR_COUNT" -gt 0 ]; then
+            echo "✅ Pull Request found."
+          else
+            echo "❌ No Pull Request found."
+            exit 1
+          fi
+
+      - name: Check if the Pull Request was merged
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          MERGED_COUNT=$(gh pr list --state merged --json number --jq 'length')
+          if [ "$MERGED_COUNT" -gt 0 ]; then
+            echo "✅ Pull Request was merged."
+          else
+            echo "❌ Pull Request was NOT merged."
+            exit 1
+          fi
+
+      - name: Check for commit history consistency
+        run: |
+          git log --graph --oneline --all
+          if git log --graph --oneline --all | grep -q "rebase"; then
+            echo "✅ Rebase detected in commit history."
+          else
+            echo "⚠️ No explicit rebase found, but history will be manually reviewed."
+          fi
